@@ -1,0 +1,7 @@
+<OutOfBrowserSettings ShortName="Lex.Db.Sync.Tests.SL Application" EnableGPUAcceleration="True" ShowInstallMenuItem="True">
+  <OutOfBrowserSettings.Blurb>Lex.Db.Sync.Tests.SL Application on your desktop; at home, at work or on the go.</OutOfBrowserSettings.Blurb>
+  <OutOfBrowserSettings.WindowSettings>
+    <WindowSettings Title="Lex.Db.Sync.Tests.SL Application" />
+  </OutOfBrowserSettings.WindowSettings>
+  <OutOfBrowserSettings.Icons />
+</OutOfBrowserSettings>
