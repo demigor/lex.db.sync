@@ -98,7 +98,7 @@
   <ItemGroup>
     <Reference Include="Lex.Db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lex.Db.1.0.0-rc2\lib\wp8\Lex.Db.dll</HintPath>
+      <HintPath>..\packages\Lex.Db.1.0.0-rc3\lib\wp8\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Data.Services.Client.WP80">
       <HintPath>..\packages\Microsoft.Data.Services.Client.WindowsPhone.5.0.0.0\lib\windowsphone80\Microsoft.Data.Services.Client.WP80.dll</HintPath>

@@ -114,7 +114,7 @@
   <ItemGroup>
     <Reference Include="Lex.Db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lex.Db.1.0.0-rc2\lib\netcore45\Lex.Db.dll</HintPath>
+      <HintPath>..\packages\Lex.Db.1.0.0-rc3\lib\netcore45\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Data.Services.Client.WindowsStore, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
