@@ -67,13 +67,6 @@ local.properties
 packages/
 NuGet/*.nupkg
 
-# Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opensdf
-*.sdf
-
 # Visual Studio profiler
 *.psess
 *.vsp

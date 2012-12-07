@@ -18,6 +18,8 @@ using Microsoft.Silverlight.Testing;
 
 /// IMPORTANT!!! Please fix the URI to the AppServer in Entities.partial.cs
 /// Don't use localhost, because of WP8 emulator. Use external name of the server.
+/// For WinRT tests, Loopback on localhost for Lex.Db.Sync.Tests must be enabled.
+/// CheckNetIsolation.exe LoopbackExempt –a –p=S-1-15-2-2433079423-632309225-905577170-3433315063-38136667-2702292642-2889839298
 
 namespace Lex.Db
 {
@@ -64,7 +66,7 @@ namespace Lex.Db
       SyncTest1Async().Wait();
     }
 #else
-#if SILVERLIGHT //&& !WINDOWS_PHONE
+#if SILVERLIGHT 
     [Asynchronous]
     public async void SyncTest1() 
     {
@@ -97,7 +99,7 @@ namespace Lex.Db
       SyncTest2Async().Wait();
     }
 #else
-#if SILVERLIGHT //&& !WINDOWS_PHONE
+#if SILVERLIGHT 
     [Asynchronous]
     public async void SyncTest2() 
     {
