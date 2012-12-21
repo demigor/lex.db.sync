@@ -56,20 +56,24 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Lex.Db">
-      <HintPath>..\..\packages\Lex.Db.1.0.0.0\lib\sl50\Lex.Db.dll</HintPath>
+    <Reference Include="Lex.Db, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Lex.Db.1.0.2.0\lib\sl50\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5">
       <HintPath>..\..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\sl50\Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Data.Edm.SL">
-      <HintPath>..\..\packages\Microsoft.Data.Edm.5.1.0\lib\sl4\Microsoft.Data.Edm.SL.dll</HintPath>
+    <Reference Include="Microsoft.Data.Edm.SL, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Microsoft.Data.Edm.5.2.0\lib\sl4\Microsoft.Data.Edm.SL.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Data.OData.SL">
-      <HintPath>..\..\packages\Microsoft.Data.OData.5.1.0\lib\sl4\Microsoft.Data.OData.SL.dll</HintPath>
+    <Reference Include="Microsoft.Data.OData.SL, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Microsoft.Data.OData.5.2.0\lib\sl4\Microsoft.Data.OData.SL.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Data.Services.Client.SL">
-      <HintPath>..\..\packages\Microsoft.Data.Services.Client.5.1.0\lib\sl4\Microsoft.Data.Services.Client.SL.dll</HintPath>
+    <Reference Include="Microsoft.Data.Services.Client.SL, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Microsoft.Data.Services.Client.5.2.0\lib\sl4\Microsoft.Data.Services.Client.SL.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Silverlight.Testing">
       <HintPath>C:\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Toolkit\dec11\Testing\Microsoft.Silverlight.Testing.dll</HintPath>
@@ -77,10 +81,12 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight">
       <HintPath>C:\Program Files (x86)\Microsoft SDKs\Silverlight\v5.0\Toolkit\dec11\Testing\Microsoft.VisualStudio.QualityTools.UnitTesting.Silverlight.dll</HintPath>
     </Reference>
+    <Reference Include="System.Net" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Spatial.SL">
-      <HintPath>..\..\packages\System.Spatial.5.1.0\lib\sl4\System.Spatial.SL.dll</HintPath>
+    <Reference Include="System.Spatial.SL, Version=5.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\System.Spatial.5.2.0\lib\sl4\System.Spatial.SL.dll</HintPath>
     </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="mscorlib" />
@@ -94,6 +100,9 @@
     </Compile>
     <Compile Include="..\UnitTests\Entities.partial.cs">
       <Link>UnitTests\Entities.partial.cs</Link>
+    </Compile>
+    <Compile Include="..\UnitTests\WcfDsExtensions.cs">
+      <Link>UnitTests\WcfDsExtensions.cs</Link>
     </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>

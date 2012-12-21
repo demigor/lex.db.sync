@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Services.Client;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -9,43 +8,51 @@ namespace Lex.Db
   class SyncInfoDeletable<TEntity> : SyncInfo
     where TEntity : class, IDeletable
   {
-    readonly Func<DataServiceContext, DataServiceQuery<TEntity>> _queryCtor;
+    readonly Func<object, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> _queryCtor;
 
-    public SyncInfoDeletable(DbSync sync, Func<DataServiceContext, DataServiceQuery<TEntity>> queryCtor)
+    public SyncInfoDeletable(DbSync sync, Func<object, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> queryCtor)
       : base(sync)
     {
       _queryCtor = queryCtor;
     }
 
-    public async override Task<int> Sync(DataServiceContext ctx = null)
+    public async override Task<int> Sync(object ctx = null)
     {
       if (!_sync.TryLock<TEntity>())
         return 0;
 
       try
       {
+        var dispose = false;
         if (ctx == null)
+        {
+          dispose = true;
           ctx = _sync.CreateContext();
+        }
+        try
+        {
+          var table = _sync._db.Table<TEntity>();
+          var lastTs = table.GetLastTs();
 
-        var table = _sync._db.Table<TEntity>();
-        var lastTs = table.GetLastTs();
+          var query = _queryCtor(ctx, lastTs);
+          var updateResult = new UpdateResultDeletable<TEntity>(query);
+          var result = await updateResult.GetChanges();
 
-        var query = _queryCtor(ctx);
-        if (lastTs != null)
-          query = (DataServiceQuery<TEntity>)query.Where(i => i.Ts > lastTs);
+          if (result > 0)
+            _sync._db.BulkWrite(() =>
+            {
+              lastTs = lastTs.Max(updateResult.ApplyChanges(table));
 
-        var updateResult = new UpdateResultDeletable<TEntity>(ctx, query);
-        var result = await updateResult.GetChanges();
+              table[DbSync.TsMetadata] = lastTs.TsToString();
+            });
 
-        if (result > 0)
-          _sync._db.BulkWrite(() =>
-          {
-            lastTs = lastTs.Max(updateResult.ApplyChanges(table));
-
-            table[DbSync.TsMetadata] = lastTs.TsToString();
-          });
-
-        return result;
+          return result;
+        }
+        finally
+        {
+          if (dispose)
+            _sync.DisposeContext(ctx);
+        }
       }
       finally
       {
@@ -58,25 +65,17 @@ namespace Lex.Db
   {
     readonly List<TEntity> _deletes = new List<TEntity>();
 
-    public UpdateResultDeletable(DataServiceContext ctx, DataServiceQuery<TEntity> query)
-      : base(ctx, query) { }
+    public UpdateResultDeletable(IEnumerable<Task<IEnumerable<TEntity>>> query) : base(query) { }
 
     public async Task<int> GetChanges()
     {
-      var response = (QueryOperationResponse<TEntity>)await _query.ExecuteAsync();
-
-      AddRange(response);
-
-      for (var continuation = response.GetContinuation(); continuation != null; continuation = response.GetContinuation())
-      {
-        response = (QueryOperationResponse<TEntity>)await _ctx.ExecuteAsync(continuation);
-        AddRange(response);
-      }
+      foreach (var task in _query)
+        AddRange(task.Result);
 
       return _updates.Count + _deletes.Count;
     }
 
-    void AddRange(QueryOperationResponse<TEntity> response)
+    void AddRange(IEnumerable<TEntity> response)
     {
       foreach (var i in response)
         (i.IsDeleted ? _deletes : _updates).Add(i);

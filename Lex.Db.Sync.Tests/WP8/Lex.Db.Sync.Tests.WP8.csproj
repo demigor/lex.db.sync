@@ -98,6 +98,9 @@
     <Compile Include="..\UnitTests\Entities.partial.cs">
       <Link>UnitTests\Entities.partial.cs</Link>
     </Compile>
+    <Compile Include="..\UnitTests\WcfDsExtensions.cs">
+      <Link>UnitTests\WcfDsExtensions.cs</Link>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -176,8 +179,9 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Lex.Db">
-      <HintPath>..\..\packages\Lex.Db.1.0.0.0\lib\wp8\Lex.Db.dll</HintPath>
+    <Reference Include="Lex.Db, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Lex.Db.1.0.2.0\lib\wp8\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Data.Edm.WP71">
       <HintPath>..\..\packages\Microsoft.Data.OData.WindowsPhone.5.0.0.0\lib\windowsphone80\Microsoft.Data.Edm.WP71.dll</HintPath>

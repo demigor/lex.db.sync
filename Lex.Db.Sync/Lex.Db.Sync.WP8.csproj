@@ -88,7 +88,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Core\AsyncExtensions.cs" />
     <Compile Include="Core\DbSync.cs" />
     <Compile Include="Core\Extensions.cs" />
     <Compile Include="Core\Interfaces.cs" />
@@ -98,13 +97,9 @@
     <Compile Include="Properties\Version.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Lex.Db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Lex.Db, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lex.Db.1.0.0.0\lib\wp8\Lex.Db.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Data.Services.Client.WP80">
-      <HintPath>..\packages\Microsoft.Data.Services.Client.WindowsPhone.5.0.0.0\lib\windowsphone80\Microsoft.Data.Services.Client.WP80.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\packages\Lex.Db.1.0.2.0\lib\wp8\Lex.Db.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

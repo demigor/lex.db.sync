@@ -1,37 +1,33 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
     <metadata>
         <id>Lex.Db.Sync</id>
-        <version>1.0.0-rc4</version>
+        <version>1.0.0-rc5</version>
         <title>Lex DB Sync Framework</title>
         <authors>Lex Lavnikov</authors>
         <owners>Lex Lavnikov</owners>
         <licenseUrl>https://raw.github.com/demigor/lex.db.sync/master/License.txt</licenseUrl>
         <projectUrl>https://github.com/demigor/lex.db.sync</projectUrl>
+        <iconUrl>http://lexblog.azurewebsites.net/wp-content/uploads/2012/12/lexdbsync32.png</iconUrl>
         <requireLicenseAcceptance>true</requireLicenseAcceptance>
         <description>Lex DB Sync Framework</description>
         <dependencies>
             <group targetFramework=".NETFramework4.0">
-                <dependency id="Lex.Db" version="1.0.0.0" />
+                <dependency id="Lex.Db" version="1.0.2.0" />
                 <dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" />
-                <dependency id="Microsoft.Data.Services.Client" version="5.1.0" />
             </group>
             <group targetFramework=".NETFramework4.5">
-                <dependency id="Lex.Db" version="1.0.0.0" />
-                <dependency id="Microsoft.Data.Services.Client" version="5.1.0" />
+                <dependency id="Lex.Db" version="1.0.2.0" />
             </group>
             <group targetFramework="Windows8.0">
-                <dependency id="Lex.Db" version="1.0.0.0" />
-                <dependency id="Microsoft.Data.OData.WindowsStore" version="5.0.0" />
+                <dependency id="Lex.Db" version="1.0.2.0" />
             </group>
             <group targetFramework="WindowsPhone8.0">
-                <dependency id="Lex.Db" version="1.0.0.0" />
-                <dependency id="Microsoft.Data.OData.WindowsPhone" version="5.0.0.0" />
+                <dependency id="Lex.Db" version="1.0.2.0" />
             </group>
             <group targetFramework="Silverlight5.0">
-                <dependency id="Lex.Db" version="1.0.0.0" />
+                <dependency id="Lex.Db" version="1.0.2.0" />
                 <dependency id="Microsoft.CompilerServices.AsyncTargetingPack" version="1.0.0" />
-                <dependency id="Microsoft.Data.Services.Client" version="5.1.0" />
             </group>
         </dependencies>
     </metadata>

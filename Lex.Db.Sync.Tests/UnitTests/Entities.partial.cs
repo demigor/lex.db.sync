@@ -17,6 +17,9 @@ namespace Lex.Db.WebEntities
       : base(new Uri("http://lexx/lex.db.sync/DataAccess.svc"))
     {
       MergeOption = MergeOption.NoTracking;
+#if SILVERLIGHT && !WINDOWS_PHONE
+      HttpStack = HttpStack.ClientHttp;
+#endif
     }
   }
 }

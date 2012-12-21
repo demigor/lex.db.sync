@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Services.Client;
-using System.Data.Services.Common;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,16 +18,6 @@ namespace Lex.Db
         throw new ArgumentNullException("db");
 
       _db = db;
-    }
-
-    internal static string GetEntitySetName<E>()
-    {
-      var type = typeof(E);
-      var x = type.GetCustomAttribute<EntitySetAttribute>();
-      if (x == null)
-        throw new ArgumentException("No EntitySet attribute defined on type " + type.Name);
-
-      return x.EntitySet;
     }
 
     readonly HashSet<Type> _locks = new HashSet<Type>();
@@ -52,20 +40,25 @@ namespace Lex.Db
         _locks.Remove(typeof(TEntity));
     }
 
-    internal abstract DataServiceContext CreateContext();
+    internal abstract object CreateContext();
+    internal abstract void DisposeContext(object ctx);
   }
 
+  /// <summary>
+  /// Database Synchronization Manager
+  /// </summary>
+  /// <typeparam name="T">Type of the shared context for queries</typeparam>
   public class DbSync<T> : DbSync
-    where T : DataServiceContext
   {
     readonly Func<T> _ctor;
+    readonly bool _disposeContext;
 
     public DbSync(DbInstance db)
-      : this(db, Ctor<T>.New)
+      : this(db, Ctor<T>.New, true)
     {
     }
 
-    public DbSync(DbInstance db, Func<T> ctor)
+    public DbSync(DbInstance db, Func<T> ctor, bool disposeContext = true)
       : base(db)
     {
       if (ctor == null)
@@ -82,68 +75,44 @@ namespace Lex.Db
     {
       CheckNotSealed();
 
-      var types = from p in typeof(T).GetPublicInstanceProperties()
-                  let type = p.PropertyType
-#if NETFX_CORE
-                  where type.GetGenericTypeDefinition() == typeof(DataServiceQuery<>)
-#else
-                  where type.IsGenericType && type.GetGenericTypeDefinition() == typeof(DataServiceQuery<>)
-#endif
-                  let result = type.GetGenericArguments()[0]
-                  where typeof(ITimestamp).IsAssignableFrom(result)
-                  select result;
-
-      foreach (var type in types)
-        if (!_syncs.ContainsKey(type))
-          _syncs[type] = CreateSync(type);
+      DoInitialize();
 
       _sealed = true;
     }
 
-    #region Generic SyncInfo ctor logic
-
-    static MethodInfo _createSyncCore = typeof(DbSync<T>).GetPrivateInstanceMethod("CreateSyncCore");
-    static MethodInfo _createSyncDeletableCore = typeof(DbSync<T>).GetPrivateInstanceMethod("CreateSyncDeletableCore");
-
-    SyncInfo CreateSyncCore<TEntity>() where TEntity : class, ITimestamp
+    protected virtual void DoInitialize()
     {
-      return new SyncInfo<TEntity>(this, CreateBaseQuery<TEntity>, CreateDeletedQuery);
+      /*       var types = from p in typeof(T).GetPublicInstanceProperties()
+                        let type = p.PropertyType
+      #if NETFX_CORE
+                        where type.GetGenericTypeDefinition() == typeof(DataServiceQuery<>)
+      #else
+                        where type.IsGenericType && type.GetGenericTypeDefinition() == typeof(DataServiceQuery<>)
+      #endif
+                        let result = type.GetGenericArguments()[0]
+                        where typeof(ITimestamp).IsAssignableFrom(result)
+                        select result;
+
+            foreach (var type in types)
+              if (!_syncs.ContainsKey(type))
+                _syncs[type] = CreateSync(type); 
+       */
     }
 
-    DataServiceQuery<DeletedObject> CreateDeletedQuery(DataServiceContext ctx, DateTime lastTs)
-    {
-      throw new NotImplementedException();
-    }
-
-    SyncInfo CreateSyncDeletableCore<TEntity>() where TEntity : class, IDeletable
-    {
-      return new SyncInfoDeletable<TEntity>(this, CreateBaseQuery<TEntity>);
-    }
-
-    SyncInfo CreateSync(Type type)
-    {
-      if (typeof(IDeletable).IsAssignableFrom(type))
-        return (SyncInfo)_createSyncDeletableCore.MakeGenericMethod(type).Invoke(this, null);
-
-      return (SyncInfo)_createSyncCore.MakeGenericMethod(type).Invoke(this, null);
-    }
-
-    #endregion
-
-    public void Register<TEntity>(Func<T, DataServiceQuery<TEntity>> queryCtor, Func<T, DateTime, IQueryable<DeletedObject>> deletedQueryCtor, params string[] tags) where TEntity : class, ITimestamp
+    public void Register<TEntity>(Func<T, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> queryCtor, Func<T, DateTime, IEnumerable<Task<IEnumerable<DeletedObject>>>> deletedQueryCtor, params string[] tags) where TEntity : class, ITimestamp
     {
       CheckNotSealed();
 
-      var info = new SyncInfo<TEntity>(this, i => queryCtor((T)i), (i, ts) => (DataServiceQuery<DeletedObject>)deletedQueryCtor((T)i, ts));
+      var info = new SyncInfo<TEntity>(this, (i, ts) => queryCtor((T)i, ts), (i, ts) => deletedQueryCtor((T)i, ts));
 
       AddSync<TEntity>(info, tags);
     }
 
-    public void RegisterDeletable<TEntity>(Func<T, DataServiceQuery<TEntity>> queryCtor, params string[] tags) where TEntity : class, IDeletable
+    public void RegisterDeletable<TEntity>(Func<T, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> queryCtor, params string[] tags) where TEntity : class, IDeletable
     {
       CheckNotSealed();
 
-      var info = new SyncInfoDeletable<TEntity>(this, i => queryCtor((T)i));
+      var info = new SyncInfoDeletable<TEntity>(this, (i, ts) => queryCtor((T)i, ts));
 
       AddSync<TEntity>(info, tags);
     }
@@ -175,11 +144,6 @@ namespace Lex.Db
     {
       if (!_sealed)
         throw new InvalidOperationException("DbSync is not initialized");
-    }
-
-    static DataServiceQuery<TEntity> CreateBaseQuery<TEntity>(DataServiceContext ctx) where TEntity : class, ITimestamp
-    {
-      return ctx.CreateQuery<TEntity>(GetEntitySetName<TEntity>());
     }
 
     public Task<int> SyncAsync<TEntity>() where TEntity : class, ITimestamp
@@ -226,12 +190,19 @@ namespace Lex.Db
         }
 
         var ctx = _ctor();
+        try
+        {
 #if TPL4
-        var results = await TaskEx.WhenAll(from s in syncs select s.Sync(ctx));
+          var results = await TaskEx.WhenAll(from s in syncs select s.Sync(ctx));
 #else
         var results = await Task.WhenAll(from s in syncs select s.Sync(ctx));
 #endif
-        return results.Sum();
+          return results.Sum();
+        }
+        finally
+        {
+          DisposeContext(ctx);
+        }
       }
       finally
       {
@@ -239,9 +210,19 @@ namespace Lex.Db
       }
     }
 
-    internal override DataServiceContext CreateContext()
+    internal override object CreateContext()
     {
       return _ctor();
+    }
+
+    internal override void DisposeContext(object ctx)
+    {
+      if (_disposeContext)
+      {
+        var d = ctx as IDisposable;
+        if (d != null)
+          d.Dispose();
+      }
     }
   }
 }

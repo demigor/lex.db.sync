@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Services.Client;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,55 +14,60 @@ namespace Lex.Db
       _sync = sync;
     }
 
-    public abstract Task<int> Sync(DataServiceContext ctx = null);
+    public abstract Task<int> Sync(object ctx = null);
   }
 
   class SyncInfo<TEntity> : SyncInfo
     where TEntity : class, ITimestamp
   {
-    readonly Func<DataServiceContext, DataServiceQuery<TEntity>> _queryCtor;
-    readonly Func<DataServiceContext, DateTime, DataServiceQuery<DeletedObject>> _deletedQueryCtor;
+    readonly Func<object, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> _queryCtor;
+    readonly Func<object, DateTime, IEnumerable<Task<IEnumerable<DeletedObject>>>> _deletedQueryCtor;
 
-    public SyncInfo(DbSync sync, Func<DataServiceContext, DataServiceQuery<TEntity>> queryCtor,
-      Func<DataServiceContext, DateTime, DataServiceQuery<DeletedObject>> deletedQueryCtor)
+    public SyncInfo(DbSync sync, Func<object, DateTime?, IEnumerable<Task<IEnumerable<TEntity>>>> queryCtor,
+      Func<object, DateTime, IEnumerable<Task<IEnumerable<DeletedObject>>>> deletedQueryCtor)
       : base(sync)
     {
       _queryCtor = queryCtor;
       _deletedQueryCtor = deletedQueryCtor;
     }
 
-    public async override Task<int> Sync(DataServiceContext ctx = null)
+    public async override Task<int> Sync(object ctx = null)
     {
       if (!_sync.TryLock<TEntity>())
         return 0;
 
       try
       {
+        var dispose = false;
         if (ctx == null)
-          ctx = _sync.CreateContext();
-
-        var table = _sync._db.Table<TEntity>();
-        var lastTs = table.GetLastTs();
-
-        var deletedQuery = default(DataServiceQuery<DeletedObject>);
-        var query = _queryCtor(ctx);
-        if (lastTs != null)
         {
-          var ts = lastTs.Value;
-          query = (DataServiceQuery<TEntity>)query.Where(i => i.Ts > ts);
-          deletedQuery = _deletedQueryCtor(ctx, ts);
+          dispose = true;
+          ctx = _sync.CreateContext();
         }
-        var updateResult = new UpdateResult<TEntity>(ctx, query, deletedQuery);
-        var result = await updateResult.GetChanges();
+        try
+        {
+          var table = _sync._db.Table<TEntity>();
+          var lastTs = table.GetLastTs();
 
-        if (result > 0)
-          _sync._db.BulkWrite(() =>
-          {
-            lastTs = lastTs.Max(updateResult.ApplyChanges(table));
-            table[DbSync.TsMetadata] = lastTs.TsToString();
-          });
+          var query = _queryCtor(ctx, lastTs);
+          var deletedQuery = lastTs != null ? _deletedQueryCtor(ctx, lastTs.Value) : null;
+          var updateResult = new UpdateResult<TEntity>(query, deletedQuery);
+          var result = await updateResult.GetChanges();
 
-        return result;
+          if (result > 0)
+            _sync._db.BulkWrite(() =>
+            {
+              lastTs = lastTs.Max(updateResult.ApplyChanges(table));
+              table[DbSync.TsMetadata] = lastTs.TsToString();
+            });
+
+          return result;
+        }
+        finally
+        {
+          if (dispose)
+            _sync.DisposeContext(ctx);
+        }
       }
       finally
       {
@@ -80,13 +84,11 @@ namespace Lex.Db
 
   abstract class UpdateResultBase<TEntity> where TEntity : class, ITimestamp
   {
-    protected readonly DataServiceQuery<TEntity> _query;
+    protected readonly IEnumerable<Task<IEnumerable<TEntity>>> _query;
     protected readonly List<TEntity> _updates = new List<TEntity>();
-    protected readonly DataServiceContext _ctx;
 
-    protected UpdateResultBase(DataServiceContext ctx, DataServiceQuery<TEntity> query)
+    protected UpdateResultBase(IEnumerable<Task<IEnumerable<TEntity>>> query)
     {
-      _ctx = ctx;
       _query = query;
     }
   }
@@ -94,10 +96,10 @@ namespace Lex.Db
   class UpdateResult<TEntity> : UpdateResultBase<TEntity>, IUpdateResult<TEntity> where TEntity : class, ITimestamp
   {
     readonly List<DeletedObject> _deletes = new List<DeletedObject>();
-    DataServiceQuery<DeletedObject> _deletedQuery;
+    IEnumerable<Task<IEnumerable<DeletedObject>>> _deletedQuery;
 
-    public UpdateResult(DataServiceContext ctx, DataServiceQuery<TEntity> query, DataServiceQuery<DeletedObject> deletedQuery)
-      : base(ctx, query)
+    public UpdateResult(IEnumerable<Task<IEnumerable<TEntity>>> query, IEnumerable<Task<IEnumerable<DeletedObject>>> deletedQuery)
+      : base(query)
     {
       _deletedQuery = deletedQuery;
     }
@@ -114,29 +116,18 @@ namespace Lex.Db
 
     async Task<int> LoadUpdates()
     {
-      var response = (QueryOperationResponse<TEntity>)await _query.ExecuteAsync();
+      foreach (var task in _query)
+        _updates.AddRange(await task);
 
-      _updates.AddRange(response);
-
-      for (var continuation = response.GetContinuation(); continuation != null; continuation = response.GetContinuation())
-      {
-        response = (QueryOperationResponse<TEntity>)await _ctx.ExecuteAsync(continuation);
-        _updates.AddRange(response);
-      }
       return _updates.Count;
     }
 
     async Task<int> LoadDeletes()
     {
-      var response = (QueryOperationResponse<DeletedObject>)await _deletedQuery.ExecuteAsync();
+      if (_deletedQuery != null)
+        foreach (var task in _deletedQuery)
+          _deletes.AddRange(await task);
 
-      _deletes.AddRange(response);
-
-      for (var continuation = response.GetContinuation(); continuation != null; continuation = response.GetContinuation())
-      {
-        response = (QueryOperationResponse<DeletedObject>)await _ctx.ExecuteAsync(continuation);
-        _deletes.AddRange(response);
-      }
       return _deletes.Count;
     }
 
@@ -146,7 +137,7 @@ namespace Lex.Db
 
       if (_deletes.Count > 0)
       {
-        table.DeleteByKeys(_deletes.Select(i => i.Key));
+        table.DeleteByKeys(from d in _deletes select d.Key);
         result = _deletes.Max(i => i.Ts);
       }
 

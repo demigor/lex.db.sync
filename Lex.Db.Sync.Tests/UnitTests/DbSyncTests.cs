@@ -24,13 +24,19 @@ using Microsoft.Silverlight.Testing;
 namespace Lex.Db
 {
   using WebEntities;
+  using System.Collections.Generic;
 
   [TestClass]
   public class DbSyncTests
 #if SILVERLIGHT
-    : WorkItemTest
-#endif
+ : WorkItemTest
   {
+#else
+  {
+    static void TestComplete() { }
+    class AsynchronousAttribute : Attribute { }
+#endif
+
     static DbInstance _db;
     static DbSync<SampleDbContext> _dbSync;
 
@@ -53,29 +59,18 @@ namespace Lex.Db
       _db.Purge();
 
       _dbSync = new DbSync<SampleDbContext>(_db);
-      _dbSync.Register(i => i.People, (i, ts) => i.DeletedItems.Where(j => j.EntitySet == "People" && j.Ts > ts).Select(j => new DeletedObject { Key = j.Id, Ts = j.Ts }));
-      _dbSync.Register(i => i.Companies, (i, ts) => i.DeletedItems.Where(j => j.EntitySet == "Companies" && j.Ts > ts).Select(j => new DeletedObject { Key = j.Id, Ts = j.Ts }));
+      _dbSync.RegisterOData(i => i.People, (q, ts) => q.Where(j => j.Ts > ts), (ctx, ts) => from i in ctx.DeletedItems where i.EntitySet == "People" && i.Ts > ts select new DeletedObject(i.Id, i.Ts));
+      _dbSync.RegisterOData(i => i.Companies, (q, ts) => q.Where(j => j.Ts > ts), (ctx, ts) => from i in ctx.DeletedItems where i.EntitySet == "Companies" && i.Ts > ts select new DeletedObject(i.Id, i.Ts));
       _dbSync.Initialize();
     }
 
-    [TestMethod]
-
+    [TestMethod, Asynchronous]
 #if NET40 
     public void SyncTest1()
     {
       SyncTest1Async().Wait();
     }
-#else
-#if SILVERLIGHT 
-    [Asynchronous]
-    public async void SyncTest1() 
-    {
-      await SyncTest1Async();
-      TestComplete();
-    }
 #endif
-#endif
-
     public async Task SyncTest1Async()
     {
       var swatch = Stopwatch.StartNew();
@@ -89,26 +84,16 @@ namespace Lex.Db
         Assert.IsNotNull(ts);
 
       Debug.WriteLine("Elapsed time " + swatch.ElapsedMilliseconds + " ms. Sync " + count);
+      TestComplete();
     }
 
-    [TestMethod]
-
+    [TestMethod, Asynchronous]
 #if NET40 
     public void SyncTest2()
     {
       SyncTest2Async().Wait();
     }
-#else
-#if SILVERLIGHT 
-    [Asynchronous]
-    public async void SyncTest2() 
-    {
-      await SyncTest2Async();
-      TestComplete();
-    }
 #endif
-#endif
-
     public async Task SyncTest2Async()
     {
       var swatch = Stopwatch.StartNew();
@@ -122,6 +107,8 @@ namespace Lex.Db
         Assert.IsNotNull(ts);
 
       Debug.WriteLine("Elapsed time " + swatch.ElapsedMilliseconds + " ms. Sync " + count);
+
+      TestComplete();
     }
   }
 }

@@ -37,7 +37,7 @@
   <ItemGroup>
     <Reference Include="Lex.Db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lex.Db.1.0.0.0\lib\net45\Lex.Db.dll</HintPath>
+      <HintPath>..\packages\Lex.Db.1.0.2.0\lib\net45\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Data.Services.Client, Version=5.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Data.Services.Client.5.1.0\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
@@ -51,7 +51,6 @@
     <Compile Include="Core\SyncInfo.cs" />
     <Compile Include="Core\SyncInfoDeletable.cs" />
     <Compile Include="Properties\Version.cs" />
-    <Compile Include="Core\AsyncExtensions.cs" />
     <Compile Include="Core\DbSync.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.Net45.cs" />

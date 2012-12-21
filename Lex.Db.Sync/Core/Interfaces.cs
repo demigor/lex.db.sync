@@ -9,8 +9,14 @@ namespace Lex.Db
 
   public class DeletedObject
   {
-    public DateTime Ts;
+    public DeletedObject(object key, DateTime ts)
+    {
+      Ts = ts;
+      Key = key;
+    }
+
     public object Key;
+    public DateTime Ts;
   }
 
   public interface IDeletable : ITimestamp

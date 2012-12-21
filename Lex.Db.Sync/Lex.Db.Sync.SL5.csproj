@@ -53,13 +53,10 @@
   <ItemGroup>
     <Reference Include="Lex.Db, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Lex.Db.1.0.0.0\lib\sl50\Lex.Db.dll</HintPath>
+      <HintPath>..\packages\Lex.Db.1.0.2.0\lib\sl50\Lex.Db.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5">
       <HintPath>..\packages\Microsoft.CompilerServices.AsyncTargetingPack.1.0.0\lib\sl50\Microsoft.CompilerServices.AsyncTargetingPack.Silverlight5.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Data.Services.Client.SL">
-      <HintPath>..\packages\Microsoft.Data.Services.Client.5.1.0\lib\sl4\Microsoft.Data.Services.Client.SL.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="system" />
@@ -70,7 +67,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Core\AsyncExtensions.cs" />
     <Compile Include="Core\DbSync.cs" />
     <Compile Include="Core\Extensions.cs" />
     <Compile Include="Core\Interfaces.cs" />

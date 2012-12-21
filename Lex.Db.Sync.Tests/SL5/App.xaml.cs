@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Net;
+using System.Net.Browser;
 using System.Windows;
 using Microsoft.Silverlight.Testing;
 
@@ -7,9 +8,10 @@ namespace Lex.Db
 {
   public partial class App : Application
   {
-
     public App()
     {
+      WebRequest.RegisterPrefix("http://", WebRequestCreator.ClientHttp);
+      
       this.Startup += this.Application_Startup;
       this.Exit += this.Application_Exit;
       this.UnhandledException += this.Application_UnhandledException;
@@ -20,6 +22,7 @@ namespace Lex.Db
     private void Application_Startup(object sender, StartupEventArgs e)
     {
       // Load the main control
+      
       this.RootVisual = UnitTestSystem.CreateTestPage();
     }
 
